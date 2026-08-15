@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthScan AI - Hackathon Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        .presentation-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            width: 90vw;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            text-align: center;
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Slide 1: Title */
+        .slide-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .slide-title h1 {
+            font-size: 4em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .slide-title p {
+            font-size: 1.8em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .slide-title .subtitle {
+            font-size: 1.3em;
+            opacity: 0.8;
+            margin-top: 40px;
+        }
+
+        /* Slide 2: Problem */
+        .slide-content {
+            text-align: left;
+            max-width: 900px;
+        }
+
+        .slide-content h2 {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .slide-content ul {
+            list-style: none;
+            font-size: 1.3em;
+            line-height: 2;
+        }
+
+        .slide-content li {
+            margin-bottom: 20px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .slide-content li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-size: 1.5em;
+        }
+
+        /* Slide 3: Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        /* Slide 4: Tech Stack */
+        .tech-stack {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .tech-item {
+            background: #f0f0f0;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .tech-item h4 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .tech-item p {
+            color: #555;
+            font-size: 1em;
+        }
+
+        /* Slide 5: How It Works */
+        .workflow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .workflow-step {
+            flex: 1;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+
+        .workflow-step h4 {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .workflow-step p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            flex: 0.5;
+        }
+
+        /* Navigation */
+        .nav-buttons {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Slide Counter */
+        .slide-counter {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 1.2em;
+            color: white;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+        }
+
+        /* Impact Section */
+        .impact-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .impact-box strong {
+            color: #ff6b6b;
+        }
+
+        /* Closing Slide */
+        .slide-closing {
+            text-align: center;
+        }
+
+        .slide-closing h2 {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .slide-closing p {
+            font-size: 1.5em;
+            color: #555;
+            margin: 15px 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 1.2em;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .highlighter {
+            background: linear-gradient(120deg, #667eea22 0%, #764ba222 100%);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 1024px) {
+            .slide {
+                padding: 40px;
+            }
+
+            .slide-title h1 {
+                font-size: 3em;
+            }
+
+            .features-grid, .tech-stack {
+                grid-template-columns: 1fr;
+            }
+
+            .workflow {
+                flex-direction: column;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+                margin: 20px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="slide-counter">
+            <span id="current-slide">1</span> / <span id="total-slides">9</span>
+        </div>
+
+        <!-- Slide 1: Title -->
+        <div class="slide slide-title active">
+            <h1>🔍 TruthScan AI</h1>
+            <p>AI-Powered Fake News Detection & Verification</p>
+            <div class="subtitle">Leveraging LLMs to Combat Misinformation</div>
+        </div>
+
+        <!-- Slide 2: The Problem -->
+        <div class="slide slide-content">
+            <h2>The Problem</h2>
+            <ul>
+                <li><strong>72%</strong> of internet users encounter misinformation daily</li>
+                <li>Fake news spreads <strong>6x faster</strong> than accurate information</li>
+                <li>Manual fact-checking is <strong>time-consuming and unreliable</strong></li>
+                <li>Users lack tools to quickly <strong>verify authenticity</strong></li>
+                <li>Trust in media is at an all-time <strong>low</strong></li>
+            </ul>
+        </div>
+
+        <!-- Slide 3: Our Solution -->
+        <div class="slide slide-content">
+            <h2>Our Solution</h2>
+            <p style="font-size: 1.2em; margin-bottom: 30px;">An intelligent system that instantly analyzes news content and determines authenticity using AI</p>
+            <div class="impact-box">
+                <strong>🎯 Goal:</strong> Empower users to identify fake news in real-time with AI-backed explanations
+            </div>
+            <ul>
+                <li>Analyzes text content, URLs, and even images (via OCR)</li>
+                <li>Provides clear verdicts with <span class="highlighter">confidence scores</span></li>
+                <li>Explains <span class="highlighter">misleading elements</span> in detail</li>
+                <li>Offers <span class="highlighter">fact-checking verification</span> for claims</li>
+            </ul>
+        </div>
+
+        <!-- Slide 4: Key Features -->
+        <div class="slide">
+            <h2 style="color: #667eea; margin-bottom: 40px;">Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>📝 Multi-Input Support</h3>
+                    <p>Analyze news from direct text, URLs, or image content with OCR technology</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🤖 AI-Powered Analysis</h3>
+                    <p>LLaMA-3 via Groq API provides intelligent verdict generation and reasoning</p>
+                </div>
+                <div class="feature-card">
+                    <h3>✅ Confidence Scoring</h3>
+                    <p>Get reliability metrics to understand how confident the verdict is</p>
+                </div>
+                <div class="feature-card">
+                    <h3>💡 Detailed Explanations</h3>
+                    <p>Understand exactly why content might be misleading or factual</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔍 Claim Verification</h3>
+                    <p>Automated fact-checking breaks down individual claims within articles</p>
+                </div>
+                <div class="feature-card">
+                    <h3>⚡ Real-Time Processing</h3>
+                    <p>Get instant results without waiting for manual review</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Technology Stack -->
+        <div class="slide slide-content">
+            <h2>Technology Stack</h2>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <h4>🔧 Backend</h4>
+                    <p>FastAPI • Python • Groq API (LLaMA-3) • Tesseract OCR</p>
+                </div>
+                <div class="tech-item">
+                    <h4>🎨 Frontend</h4>
+                    <p>React • TypeScript • Vite • Tailwind CSS • Framer Motion</p>
+                </div>
+                <div class="tech-item">
+                    <h4>🧠 AI/ML</h4>
+                    <p>LangChain • NLTK • Retrieval-Augmented Generation (RAG)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: How It Works -->
+        <div class="slide">
+            <h2 style="color: #667eea; margin-bottom: 50px;">How It Works</h2>
+            <div class="workflow">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <h4>User Input</h4>
+                    <p>Text, URL, or Image</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <h4>Text Processing</h4>
+                    <p>Clean & preprocess data</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <h4>AI Analysis</h4>
+                    <p>LLM evaluation</p>
+                </div>
+                <div class="arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <h4>Result</h4>
+                    <p>Verdict & Insights</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Results & Impact -->
+        <div class="slide slide-content">
+            <h2>Impact & Results</h2>
+            <ul>
+                <li>✅ <strong>Instant Verification:</strong> Get fake news verdicts in seconds</li>
+                <li>✅ <strong>High Accuracy:</strong> Leveraging state-of-the-art LLMs (LLaMA-3)</li>
+                <li>✅ <strong>User-Friendly:</strong> Intuitive interface for everyday users</li>
+                <li>✅ <strong>Scalable:</strong> Can process thousands of articles simultaneously</li>
+                <li>✅ <strong>Transparent:</strong> Explains reasoning behind each verdict</li>
+            </ul>
+            <div class="impact-box" style="margin-top: 40px;">
+                <strong>Use Cases:</strong> Journalists • Social Media Platforms • News Organizations • Educators • Individual Users
+            </div>
+        </div>
+
+        <!-- Slide 8: Future Roadmap -->
+        <div class="slide slide-content">
+            <h2>Future Enhancements</h2>
+            <ul>
+                <li>🌍 <strong>Multi-language Support:</strong> Detect misinformation in multiple languages</li>
+                <li>📊 <strong>Analytics Dashboard:</strong> Track misinformation trends over time</li>
+                <li>🔗 <strong>Browser Extension:</strong> Real-time fact-checking while browsing</li>
+                <li>📱 <strong>Mobile App:</strong> Accessible verification on the go</li>
+                <li>🤝 <strong>API Integration:</strong> Integration with news platforms and social media</li>
+                <li>🎯 <strong>Source Credibility Ranking:</strong> Rate news source reliability</li>
+            </ul>
+        </div>
+
+        <!-- Slide 9: Call to Action -->
+        <div class="slide slide-closing">
+            <h2>Join Us in Fighting Misinformation</h2>
+            <p>TruthScan AI: Empowering users with intelligent, instant fact-checking</p>
+            <div class="impact-box" style="font-size: 1.2em;">
+                <strong>Together, we can build a more informed and truthful world</strong>
+            </div>
+            <div style="margin-top: 40px; color: #666; font-size: 1.1em;">
+                <p>🔗 GitHub • 💬 Questions • 🚀 Try it Now</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button id="prev-btn" onclick="previousSlide()">← Previous</button>
+        <button id="next-btn" onclick="nextSlide()">Next →</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            
+            document.getElementById('current-slide').textContent = currentSlide + 1;
+            document.getElementById('prev-btn').disabled = currentSlide === 0;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function previousSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+        });
+
+        // Initialize
+        document.getElementById('total-slides').textContent = totalSlides;
+        document.getElementById('prev-btn').disabled = true;
+    </script>
+</body>
+</html>
