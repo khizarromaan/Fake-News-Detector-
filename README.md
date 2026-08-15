@@ -10,7 +10,7 @@
     <strong>An advanced, multi-modal AI platform designed to detect and expose fake news through Text, Images, and URLs.</strong>
   </p>
   <p align="center">
-    <strong>🚀 <a href="https://fake-news-detector-ten-flame.vercel.app/">Live Demo</a></strong>
+    <strong>🚀 <a href="[https://fake-news-detector-ten-flame.vercel.app/](https://fake-news-detector-git-master-khizarromaans-projects.vercel.app/)">Live Demo</a></strong>
   </p>
 </div>
 
