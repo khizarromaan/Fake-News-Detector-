@@ -1,91 +1,206 @@
 import os
 import re
 import string
-import nltk
-from nltk.corpus import stopwords
+import json
+from datetime import datetime
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 from groq import Groq
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import pytesseract
+from PIL import Image
+import io
+import requests
+from bs4 import BeautifulSoup
 
-# Ensure you have the NLTK stopwords downloaded before running
-# nltk.download('stopwords')
+# Explicitly set Tesseract path for Windows environments where it's not in PATH
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe'
 
-def clean_text(text):
-    text = text.lower()
-    text = text.translate(str.maketrans('', '', string.punctuation))
-    text = re.sub(r'\d+', '', text)
-    text = text.encode('ascii', 'ignore').decode('ascii')
-    
-    try:
-        stop_words = set(stopwords.words('english'))
-        words = text.split()
-        filtered_words = [word for word in words if word not in stop_words]
-        return ' '.join(filtered_words)
-    except LookupError:
-        # Fallback if stopwords are not downloaded
-        return text
+load_dotenv()
 
-def explain_and_verify(cleaned_text, original_text):
-    load_dotenv()
+app = FastAPI(title="TruthScan AI Backend - Multi Input")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class TextRequest(BaseModel):
+    content: str
+
+class URLRequest(BaseModel):
+    url: str
+
+class AnalysisClaim(BaseModel):
+    claim: str
+    assessment: str
+    reasoning: str
+    verification: str
+
+class AnalysisResponse(BaseModel):
+    status: str
+    input_type: str
+    result: str
+    confidence: int
+    title: str | None
+    source: str | None
+    published_date: str | None
+    extracted_text: str | None
+    claims: list[dict]
+    explanation: str
+    evidence: list[str]
+    sources_checked: list[str]
+
+def get_base_response(input_type: str) -> dict:
+    return {
+        "status": "success",
+        "input_type": input_type,
+        "result": "ERROR",
+        "confidence": 0,
+        "title": None,
+        "source": None,
+        "published_date": None,
+        "extracted_text": None,
+        "claims": [],
+        "explanation": "No explanation provided.",
+        "evidence": [],
+        "sources_checked": []
+    }
+
+def analyze_content(text: str, input_type: str, title: str = None, source: str = None) -> AnalysisResponse:
     try:
         client = Groq()
-        
         system_prompt = (
             "You are an AI-Powered Fake News Detector.\n"
-            "Analyze the following news text for potential misleading claims or fake news elements.\n"
-            "First, declare if you think this is LIKELY REAL or LIKELY FAKE/MISLEADING. Then, explain why it might be misleading and act as a fact-checker verifying the claims based on reliable reasoning.\n\n"
-            "Structure your response:\n"
-            "1. Verdict (LIKELY REAL / LIKELY FAKE)\n"
-            "2. Potential Misleading Elements\n"
-            "3. Explanation\n"
-            "4. Fact-Checking Verification"
+            "Analyze the provided text for fake news or misleading claims.\n"
+            "Return a strictly valid JSON object matching exactly this schema:\n"
+            "{\n"
+            '  "clean_text": "Extract and return ONLY the relevant news content from the input. Completely remove all UI elements, browser tabs, OCR garbage, navigation menus, ads, and irrelevant website text. If it is long, provide a clean excerpt.",\n'
+            '  "result": "Likely True" or "Likely Fake" or "Needs Verification",\n'
+            '  "confidence": <integer between 0 and 100>,\n'
+            '  "claims": [\n'
+            '    {\n'
+            '      "claim": "The exact claim",\n'
+            '      "assessment": "Short assessment",\n'
+            '      "reasoning": "Reasoning",\n'
+            '      "verification": "Evidence"\n'
+            '    }\n'
+            '  ],\n'
+            '  "explanation": "Overall explanation of why it is true or fake",\n'
+            '  "evidence": ["List of strings showing supporting or conflicting evidence"],\n'
+            '  "sources_checked": ["List of actual URLs or reliable sources used to verify"]\n'
+            "}"
         )
         
-        user_prompt = f"Original News Content:\n{original_text}\n\nCleaned Content (for analysis context):\n{cleaned_text}"
+        user_prompt = f"Title: {title or 'Unknown'}\nSource: {source or 'Unknown'}\nContent:\n{text}"
 
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-              {
-                "role": "system",
-                "content": system_prompt
-              },
-              {
-                "role": "user",
-                "content": user_prompt
-              }
+              {"role": "system", "content": system_prompt},
+              {"role": "user", "content": user_prompt}
             ],
-            temperature=1,
-            max_completion_tokens=2048,
-            top_p=1,
-            stream=True,
-            stop=None
+            temperature=0.3,
+            response_format={"type": "json_object"}
         )
         
-        for chunk in completion:
-            print(chunk.choices[0].delta.content or "", end="")
-        print()
-        return None
-    except Exception as e:
-        return f"Error connecting to LLM for explanation: {e}"
-
-def main():
-    print("--- AI-Powered Fake News Detector (LLM-Based) ---")
-    print("This tool will clean your input and use Groq to detect and fact-check the news.\n")
-    
-    news_text = input("Enter news text to analyze:\n")
-    if not news_text.strip():
-        print("Empty input. Exiting.")
-        return
+        data = json.loads(completion.choices[0].message.content)
         
-    print("\n[i] Cleaning input text...")
-    cleaned = clean_text(news_text)
+        base = get_base_response(input_type)
+        base["result"] = data.get("result", "ERROR")
+        base["confidence"] = data.get("confidence", 0)
+        base["claims"] = data.get("claims", [])
+        base["explanation"] = data.get("explanation", "")
+        base["evidence"] = data.get("evidence", [])
+        base["sources_checked"] = data.get("sources_checked", [])
+        base["extracted_text"] = data.get("clean_text", text)
+        base["title"] = title
+        base["source"] = source
+        
+        return AnalysisResponse(**base)
+    except Exception as e:
+        err = get_base_response(input_type)
+        err["status"] = "error"
+        err["explanation"] = f"Failed to analyze with AI: {str(e)}"
+        return AnalysisResponse(**err)
+
+
+@app.post("/api/analyze/text", response_model=AnalysisResponse)
+async def analyze_text(request: TextRequest):
+    if not request.content.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
+    return analyze_content(request.content, "text")
+
+
+@app.post("/api/analyze/image", response_model=AnalysisResponse)
+async def analyze_image(file: UploadFile = File(...)):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
     
-    print("[i] Sending to AI for Analysis and Fact-Checking...")
-    print("\n--- AI Explanation and Verification ---\n")
-    
-    error_msg = explain_and_verify(cleaned, news_text)
-    if error_msg:
-        print(error_msg)
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+        extracted_text = pytesseract.image_to_string(image).strip()
+        
+        if len(extracted_text) < 10:
+            raise HTTPException(status_code=400, detail="We couldn't clearly read the text in this image. Please upload a clearer image or paste the news text manually.")
+            
+        return analyze_content(extracted_text, "image")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process image: {str(e)}")
+
+
+@app.post("/api/analyze/url", response_model=AnalysisResponse)
+async def analyze_url(request: URLRequest):
+    url = request.url
+    parsed = urlparse(url)
+    if not parsed.scheme in ["http", "https"]:
+        raise HTTPException(status_code=400, detail="Invalid URL scheme. Must be http or https.")
+        
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        res = requests.get(url, headers=headers, timeout=10)
+        res.raise_for_status()
+        
+        soup = BeautifulSoup(res.text, 'html.parser')
+        
+        # Remove scripts, styles, nav, headers, etc.
+        for element in soup(["script", "style", "nav", "header", "footer", "iframe"]):
+            element.decompose()
+            
+        # Try to get title
+        title = soup.title.string if soup.title else None
+        if not title:
+            h1 = soup.find('h1')
+            title = h1.text if h1 else None
+            
+        # Get source from hostname
+        source = parsed.hostname
+        
+        # Get main text (best effort by finding paragraphs)
+        paragraphs = soup.find_all('p')
+        text_content = ' '.join([p.get_text(strip=True) for p in paragraphs if len(p.get_text(strip=True)) > 20])
+        
+        if len(text_content) < 50:
+            raise HTTPException(status_code=400, detail="We couldn't retrieve this article automatically. Please paste the article text instead.")
+            
+        return analyze_content(text_content, "url", title=title, source=source)
+        
+    except requests.exceptions.RequestException:
+        raise HTTPException(status_code=400, detail="We couldn't retrieve this article automatically. Website might be blocking access.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse URL: {str(e)}")
+
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

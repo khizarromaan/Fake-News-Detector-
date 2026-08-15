@@ -3,3 +3,11 @@ langchain
 langchain-groq
 langchain-core
 python-dotenv
+fastapi
+uvicorn
+groq
+pytesseract
+beautifulsoup4
+python-multipart
+Pillow
+requests
