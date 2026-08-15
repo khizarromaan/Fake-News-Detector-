@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, Cpu } from 'lucide-react';
+import { Cpu } from 'lucide-react';
 
 export const Hero: React.FC = () => {
   return (

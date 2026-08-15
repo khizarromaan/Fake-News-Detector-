@@ -30,7 +30,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-white font-sans antialiased overflow-x-hidden;
+    @apply bg-background text-white font-sans antialiased overflow-x-clip;
   }
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { NewsAnalyzer } from './components/NewsAnalyzer';
@@ -9,6 +9,7 @@ import { About } from './components/About';
 import { MiniGame } from './components/MiniGame';
 import { SourceSection } from './components/SourceSection';
 import { AwarenessSection } from './components/AwarenessSection';
+import { Footer } from './components/Footer';
 import { analyzeNews } from './services/api';
 import { AnalysisRequest, AnalysisResponse, HistoryItem } from './types/analysis';
 import { AlertCircle, History } from 'lucide-react';
@@ -107,7 +108,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-x-clip">
       {/* Navbar History button trigger */}
       <div className="fixed top-3 right-4 z-50 md:hidden">
         <button 
@@ -127,7 +128,7 @@ function App() {
         
         <div className={`mx-auto px-4 w-full transition-all duration-500 ${result && !isAnalyzing ? 'max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-8 items-start' : 'max-w-4xl flex flex-col items-center'}`}>
           
-          <div className={`w-full transition-all duration-500 ${result && !isAnalyzing ? 'lg:col-span-5 sticky top-24' : ''}`}>
+          <div className={`w-full transition-all duration-500 ${result && !isAnalyzing ? 'lg:col-span-5 sticky top-24 self-start' : ''}`}>
             <NewsAnalyzer 
               onAnalyze={handleAnalyze} 
               isAnalyzing={isAnalyzing} 
@@ -149,7 +150,7 @@ function App() {
                     <h4 className="text-danger font-bold text-sm">Analysis Failed</h4>
                     <p className="text-danger/80 text-sm">{error}</p>
                     <button 
-                      onClick={() => handleAnalyze({ news_text: originalText })}
+                      onClick={() => handleAnalyze({ type: 'text', content: originalText })}
                       className="mt-2 text-xs bg-danger/20 text-danger hover:bg-danger/30 px-3 py-1.5 rounded transition-colors"
                     >
                       Retry Analysis
@@ -224,6 +225,8 @@ function App() {
           });
         `
       }} />
+
+      <Footer />
     </div>
   );
 }

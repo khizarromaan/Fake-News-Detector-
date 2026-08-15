@@ -15,8 +15,11 @@ import io
 import requests
 from bs4 import BeautifulSoup
 
+import sys
+
 # Explicitly set Tesseract path for Windows environments where it's not in PATH
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe'
+if sys.platform == "win32":
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe'
 
 load_dotenv()
 
@@ -24,7 +27,7 @@ app = FastAPI(title="TruthScan AI Backend - Multi Input")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -80,6 +83,7 @@ def analyze_content(text: str, input_type: str, title: str = None, source: str =
             "Analyze the provided text for fake news or misleading claims.\n"
             "Return a strictly valid JSON object matching exactly this schema:\n"
             "{\n"
+            '  "clean_text": "Extract and return ONLY the relevant news content from the input. Completely remove all UI elements, browser tabs, OCR garbage, navigation menus, ads, and irrelevant website text. If it is long, provide a clean excerpt.",\n'
             '  "result": "Likely True" or "Likely Fake" or "Needs Verification",\n'
             '  "confidence": <integer between 0 and 100>,\n'
             '  "claims": [\n'
@@ -117,7 +121,7 @@ def analyze_content(text: str, input_type: str, title: str = None, source: str =
         base["explanation"] = data.get("explanation", "")
         base["evidence"] = data.get("evidence", [])
         base["sources_checked"] = data.get("sources_checked", [])
-        base["extracted_text"] = text
+        base["extracted_text"] = data.get("clean_text", text)
         base["title"] = title
         base["source"] = source
         

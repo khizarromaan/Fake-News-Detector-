@@ -1,6 +1,6 @@
 import { AnalysisRequest, AnalysisResponse } from '../types/analysis';
 
-const API_BASE = "http://127.0.0.1:8000/api/analyze";
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/analyze";
 
 export async function analyzeNews(request: AnalysisRequest): Promise<AnalysisResponse> {
   try {
