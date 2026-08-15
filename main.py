@@ -4,8 +4,7 @@ import string
 import nltk
 from nltk.corpus import stopwords
 from dotenv import load_dotenv
-from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate
+from groq import Groq
 
 # Ensure you have the NLTK stopwords downloaded before running
 # nltk.download('stopwords')
@@ -28,14 +27,12 @@ def clean_text(text):
 def explain_and_verify(cleaned_text, original_text):
     load_dotenv()
     try:
-        llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.2)
+        client = Groq()
         
-        prompt_template = ChatPromptTemplate.from_template(
+        system_prompt = (
             "You are an AI-Powered Fake News Detector.\n"
             "Analyze the following news text for potential misleading claims or fake news elements.\n"
             "First, declare if you think this is LIKELY REAL or LIKELY FAKE/MISLEADING. Then, explain why it might be misleading and act as a fact-checker verifying the claims based on reliable reasoning.\n\n"
-            "Original News Content:\n{original_text}\n\n"
-            "Cleaned Content (for analysis context):\n{cleaned_text}\n\n"
             "Structure your response:\n"
             "1. Verdict (LIKELY REAL / LIKELY FAKE)\n"
             "2. Potential Misleading Elements\n"
@@ -43,14 +40,33 @@ def explain_and_verify(cleaned_text, original_text):
             "4. Fact-Checking Verification"
         )
         
-        formatted_prompt = prompt_template.format_messages(
-            original_text=original_text, 
-            cleaned_text=cleaned_text
+        user_prompt = f"Original News Content:\n{original_text}\n\nCleaned Content (for analysis context):\n{cleaned_text}"
+
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+              {
+                "role": "system",
+                "content": system_prompt
+              },
+              {
+                "role": "user",
+                "content": user_prompt
+              }
+            ],
+            temperature=1,
+            max_completion_tokens=2048,
+            top_p=1,
+            stream=True,
+            stop=None
         )
-        response = llm.invoke(formatted_prompt)
-        return response.content
+        
+        for chunk in completion:
+            print(chunk.choices[0].delta.content or "", end="")
+        print()
+        return None
     except Exception as e:
-        return f"Error connecting to LLM for explanation: {e}\nPlease ensure your GROQ_API_KEY is set in the .env file."
+        return f"Error connecting to LLM for explanation: {e}"
 
 def main():
     print("--- AI-Powered Fake News Detector (LLM-Based) ---")
@@ -67,8 +83,9 @@ def main():
     print("[i] Sending to AI for Analysis and Fact-Checking...")
     print("\n--- AI Explanation and Verification ---\n")
     
-    explanation = explain_and_verify(cleaned, news_text)
-    print(explanation)
+    error_msg = explain_and_verify(cleaned, news_text)
+    if error_msg:
+        print(error_msg)
 
 if __name__ == "__main__":
     main()
